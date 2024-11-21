@@ -1,0 +1,37 @@
+﻿@page "/test/bykeyname"
+@implements IAsyncDisposable
+@inject HotKeys HotKeys
+
+<h1>Test by Key Name</h1>
+
+<p>This page captures media keys (next/prev/stop/pause) by key name string.</p>
+
+<EnteredKeyList @ref="_enteredKeyList" />
+
+@code {
+    private EnteredKeyList? _enteredKeyList;
+
+    private HotKeysContext? _hotKeysContext;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _hotKeysContext = this.HotKeys.CreateContext()
+                .Add(new Key("MediaTrackNext"), OnHotKey)
+                .Add(new Key("MediaTrackPrevious"), OnHotKey)
+                .Add(new Key("MediaPlayPause"), OnHotKey)
+                .Add(new Key("MediaStop"), OnHotKey);
+        }
+    }
+
+    private void OnHotKey(HotKeyEntryByKey hotKeyEntry)
+    {
+        _enteredKeyList?.OnEnteredKey(hotKeyEntry);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (this._hotKeysContext is not null) await this._hotKeysContext.DisposeAsync();
+    }
+}

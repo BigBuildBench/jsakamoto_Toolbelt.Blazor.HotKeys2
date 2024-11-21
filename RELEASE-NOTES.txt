@@ -1,0 +1,47 @@
+v.5.1.0
+- Improve: Add Numpad and Japanese specific keys and codes.
+
+v.5.0.1
+- Improve: Show the developers the guide message when using the Toolbelt.Blazor.getProperty JavaScript module is not loaded.
+
+v.5.0.0
+- Improve: Support for a round trip for interactive and non-interactive pages on .NET 8.
+- Update: The IDisposable interface of the HotKeyContext class is now obsolete. Instead, use the new "DisposeAsync" method.
+- Update: The "Keys" property of the HotKeyContext class is now obsolete. Instead, use the new "HotKeyEntries" property.
+- Fix: unexpected exceptions due to the race condition of the JavaScript interop.
+
+v.4.1.0.1
+- Update the README to use the "OnAfterRender" method to initialize hotkeys.
+
+v.4.1.0
+- Improve: Add the "State" property that has a "Disabled" property that can enable/disable a hotkey to the HotkeyEntry class.
+
+v.4.0.1
+- Fix: Disposing immediately after "CreateContext" will not work.
+
+v.4.0.0
+- [Breaking Change] The "Remove()" method now removes a single hotkey entry by only the key combination parameters, at least as long as it can be uniquely identified.
+  - It will throw an exception if the parameters identify two or more hotkey entries.
+- Improve: Add another overloaded "Remove()" method with a filter function to remove multiple hotkey entries.
+
+v.3.3.0
+- Improve: Add overloaded version of Add() methods for async methods returns a Task.
+
+v.3.2.1
+- Improve: Add the "ToStringKeys" method to the HotkeyEntry class that returns the array of string representation of the key combination.
+
+v.3.2.0
+- Fix: It didn't work on the InteractiveServer mode Blazor in .NET 8
+
+v.3.1.0
+- Improve: Exclude by a custom CSS query selector.
+- Improve: Add .NET 8 support.
+
+v.3.0.0
+- Improve: explicit calling StateHasChanged is no longer needed inside hotkey handler methods.
+
+v.2.0.0
+- Improve: Remove importing inline "data:" protocol JavaScript code. (Instead, add a dependency to the Toolbelt.Blazor.GetProperty.Script NuGet package)
+
+v.1.0.0
+- 1st release.

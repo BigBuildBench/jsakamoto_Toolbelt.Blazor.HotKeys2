@@ -1,0 +1,68 @@
+﻿@page "/"
+@implements IAsyncDisposable
+@inject HotKeys HotKeys
+
+<h1>@Greeting</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+<p>
+    <button class="btn btn-secondary" @onclick="OnClickRemoveHotKey">
+        Remove the hot key "G"
+    </button>
+
+    <button class="btn btn-secondary" @onclick="OnClickDisposeHotKeyContext">
+        Dispose the hot key context
+    </button>
+</p>
+
+@code {
+    private const string GreetingA = "Hello, world!";
+    private const string GreetingB = "Hi, there!";
+    private const string GreetingC = "How's it going?";
+
+    private string Greeting = GreetingA;
+
+    private HotKeysContext? _hotKeysContext;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _hotKeysContext = this.HotKeys.CreateContext()
+                .Add(Code.G, OnHotKey)
+                .Add(Key.At, OnHotKey);
+
+            // Check the issue #20.
+            var temporaryContext = this.HotKeys.CreateContext()
+                .Add(Code.V, OnHotKey);
+            await temporaryContext.DisposeAsync();
+        }
+    }
+
+    private void OnHotKey()
+    {
+        this.Greeting =
+            this.Greeting == GreetingA ? GreetingB :
+            this.Greeting == GreetingB ? GreetingC :
+            GreetingA;
+    }
+
+    private void OnClickRemoveHotKey()
+    {
+        _hotKeysContext?.Remove(Code.G);
+    }
+
+    private async Task OnClickDisposeHotKeyContext()
+    {
+        if (this._hotKeysContext is not null) await this._hotKeysContext.DisposeAsync();
+        _hotKeysContext = null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (this._hotKeysContext is not null) await this._hotKeysContext.DisposeAsync();
+    }
+}

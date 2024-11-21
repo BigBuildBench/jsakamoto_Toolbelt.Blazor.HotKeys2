@@ -1,0 +1,68 @@
+﻿<div class="entered-keys">
+    <table>
+        <thead>
+            <tr>
+                <th>ModKeys</th>
+                <th>Key</th>
+                <th>Code</th>
+                <th>Repeat</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var enteredKey in EnteredKeys)
+            {
+                <tr @key="enteredKey.Id">
+                    <td>@(enteredKey.Modifiers == ModCode.None ? "" : enteredKey.Modifiers.ToString("f"))</td>
+                    <td>@enteredKey.Key</td>
+                    <td>@enteredKey.Code</td>
+                    <td>x @enteredKey.RepeatCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private readonly List<EnteredKey> EnteredKeys = new();
+
+    private EnteredKey? LastEnteredKey = null;
+
+    public void OnEnteredKey(HotKeyEntryByCode hotKeyEntry, bool appendLast = false)
+    {
+        OnEnteredKey(new EnteredKey(hotKeyEntry.Modifiers, code: hotKeyEntry.Code), appendLast);
+    }
+
+    public void OnEnteredKey(HotKeyEntryByKey hotKeyEntry, bool appendLast = false)
+    {
+        OnEnteredKey(new EnteredKey(hotKeyEntry.Modifiers, key: hotKeyEntry.Key), appendLast);
+    }
+
+    public void OnEnteredKey(HotKeyDownEventArgs e)
+    {
+        OnEnteredKey(new EnteredKey(e.Modifiers, e.Key, e.Code));
+    }
+
+    public void OnEnteredKey(EnteredKey enteredKey, bool appendLast = false)
+    {
+        if (LastEnteredKey == enteredKey)
+        {
+            LastEnteredKey.RepeatCount++;
+        }
+        else
+        {
+            LastEnteredKey = enteredKey;
+            if (appendLast) EnteredKeys.Add(enteredKey);
+            else EnteredKeys.Insert(0, enteredKey);
+
+            if (EnteredKeys.Count > 10) EnteredKeys.RemoveAt(appendLast ? 0: 10);
+        }
+        this.StateHasChanged();
+    }
+
+    public void Clear()
+    {
+        this.EnteredKeys.Clear();
+        this.LastEnteredKey = null;
+        this.StateHasChanged();
+    }
+}

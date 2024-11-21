@@ -1,0 +1,85 @@
+﻿@page "/counter"
+@using System.Runtime.InteropServices
+@implements IAsyncDisposable
+@inject HotKeys HotKeys
+
+<h1>Counter</h1>
+
+<p>Current count: @_currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@if (_isWasm)
+{
+    // "PreventDefault = true" will works only on a Blazor WebAssembly app.
+    <div class="hot-keys-cheat-sheet alert alert-secondary mt-4">
+        In this page, <span class="key">Ctrl</span>+<span class="key">A</span> (select all of the contents) is disallowed.
+    </div>
+}
+
+<div>
+    <input type="text" class="form-control" placeholder="Hotkeys are enabled in this field" />
+</div>
+
+<div class="mt-4 disabled-hotkeys">
+    <input type="text" class="form-control" placeholder="Hotkeys are disabled in this field" />
+</div>
+
+<div class="mt-4">
+    <input type="text" class="form-control disabled-state-hotkeys" placeholder="Hotkey 'Y' is @HotKeyState in C#" />
+</div>
+
+<div class="mt-4">
+    <button class="form-control state-trigger-button" @onclick="OnTriggerDisabledState">Trigger state</button>
+</div>
+
+<div class="mt-1">
+    <span>State: <b>@HotKeyState</b></span>
+</div>
+
+@code {
+    private readonly bool _isWasm = OperatingSystem.IsBrowser();
+
+    private int _currentCount = 0;
+
+    private HotKeysContext? _hotKeysContext;
+
+    private readonly HotKeyEntryState _hotKeyEntryState = new() { Disabled = true };
+
+    private string HotKeyState => _hotKeyEntryState.Disabled ? "disabled" : "enabled";
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _hotKeysContext = this.HotKeys.CreateContext()
+                .Add(Code.U, this.IncrementCount, new() { Exclude = Exclude.None, ExcludeSelector = ".disabled-hotkeys *" })
+                .Add(Code.Y, this.IncrementCount, new() { Exclude = Exclude.None, State = _hotKeyEntryState });
+            this.HotKeys.KeyDown += HotKeys_KeyDown;
+        }
+    }
+
+    private void IncrementCount()
+    {
+        _currentCount++;
+    }
+
+    private void OnTriggerDisabledState()
+    {
+        _hotKeyEntryState.Disabled = !_hotKeyEntryState.Disabled;
+    }
+
+    private void HotKeys_KeyDown(object? sender, HotKeyDownEventArgs e)
+    {
+        if (e.Modifiers == ModCode.Ctrl && e.Code == Code.A && e.IsWasm)
+        {
+            e.PreventDefault = true;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        this.HotKeys.KeyDown -= HotKeys_KeyDown;
+        if (this._hotKeysContext is not null) await this._hotKeysContext.DisposeAsync();
+    }
+}

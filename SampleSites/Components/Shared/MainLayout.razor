@@ -1,0 +1,84 @@
+﻿@inherits LayoutComponentBase
+@implements IAsyncDisposable
+@inject HotKeys HotKeys
+@inject NavigationManager NavigationManager
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4">
+            <a href="https://github.com/jsakamoto/Toolbelt.Blazor.HotKeys2" target="_blank" class="ml-md-auto about-link">About Blazor HotKeys2</a>
+        </div>
+
+        <div class="content px-4">
+            <div>
+                @Body
+            </div>
+
+            <div class="hot-keys-cheat-sheet alert alert-secondary mt-4">
+                <span class="key">?</span> ... <span class="description">Open the Hot keys cheat sheet.</span>
+            </div>
+
+            <div class="popup-container @(_hotKeysCheatSheetVisible ? "visible" : "")" @onclick="@(()=> this.SetHotkeysCheatSheetVisible(false))">
+
+                <CheatSheet HotKeysContext="_hotKeysContext" />
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private HotKeysContext? _hotKeysContext;
+
+    private DateTime _lastCtrlKeyPressed = DateTime.MinValue;
+
+    private bool _hotKeysCheatSheetVisible = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _hotKeysContext = HotKeys.CreateContext()
+                .Add(Key.Question, () => SetHotkeysCheatSheetVisible(!_hotKeysCheatSheetVisible), "", Exclude.InputNonText | Exclude.TextArea) // Open/Close the Hot keys cheat sheet.
+                .Add(Key.Escape, () => SetHotkeysCheatSheetVisible(false), "", Exclude.InputNonText | Exclude.TextArea) // Close the Hot keys cheat sheet.
+                .Add(Code.H, () => GoTo("/"), "Go to Home page.", Exclude.TextArea | Exclude.ContentEditable)
+                .Add(Code.C, () => GoTo("/counter"), "Go to Counter page.", Exclude.InputText | Exclude.TextArea)
+                .Add(Code.F, () => GoTo("/fetchdata"), "Go to Fetch data page.")
+                .Add(Key.Control, OnCtrlKeyDown, "Double tap to go to Home.");
+        }
+    }
+
+    private ValueTask GoTo(string url)
+    {
+        var urlToNavigate = NavigationManager.BaseUri.TrimEnd('/') + "/" + url.TrimStart('/');
+        NavigationManager.NavigateTo(urlToNavigate);
+        return ValueTask.CompletedTask;
+    }
+
+    private void OnCtrlKeyDown()
+    {
+        var lastCtrlKeyPressed = _lastCtrlKeyPressed;
+        _lastCtrlKeyPressed = DateTime.Now;
+
+        if ((DateTime.Now - lastCtrlKeyPressed).TotalMilliseconds <= 200)
+        {
+            this.GoTo("/");
+        }
+    }
+
+    private void SetHotkeysCheatSheetVisible(bool visible)
+    {
+        if (_hotKeysCheatSheetVisible == visible) return;
+        _hotKeysCheatSheetVisible = visible;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (this._hotKeysContext is not null) await this._hotKeysContext.DisposeAsync();
+    }
+}
